@@ -1,0 +1,374 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Tienda | Productos seleccionados</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #172033;
+      background: #f8f8fa;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 6%;
+      background: white;
+      border-bottom: 1px solid #e8e8ed;
+    }
+
+    .logo {
+      font-size: 23px;
+      font-weight: 800;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 16px;
+      font-weight: 700;
+    }
+
+    .cart-button, .add-button {
+      background: #172033;
+      color: white;
+    }
+
+    .hero {
+      padding: 65px 6%;
+      background: #ecebff;
+    }
+
+    .hero p {
+      max-width: 500px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      max-width: 650px;
+      font-size: clamp(36px, 6vw, 60px);
+      line-height: 1.05;
+      margin: 12px 0;
+    }
+
+    main {
+      padding: 35px 6% 70px;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 22px;
+    }
+
+    .product {
+      overflow: hidden;
+      background: white;
+      border: 1px solid #e9e9ee;
+      border-radius: 15px;
+    }
+
+    .product-image {
+      display: grid;
+      place-items: center;
+      min-height: 180px;
+      background: #f0eff8;
+      font-size: 58px;
+    }
+
+    .product-info {
+      padding: 18px;
+    }
+
+    .product-info p {
+      color: #646b7b;
+      line-height: 1.5;
+    }
+
+    .price {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .add-button {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .cart {
+      display: none;
+      margin-top: 30px;
+      padding: 22px;
+      background: white;
+      border: 1px solid #e9e9ee;
+      border-radius: 15px;
+    }
+
+    .cart.visible {
+      display: block;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .quantity {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quantity button {
+      padding: 7px 11px;
+      background: #ecebff;
+    }
+
+    .remove-button {
+      color: #a12636;
+      background: transparent;
+      padding: 6px;
+    }
+
+    footer {
+      padding: 25px 6%;
+      background: white;
+      color: #646b7b;
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      header {
+        padding: 16px 5%;
+      }
+
+      .logo {
+        font-size: 19px;
+      }
+
+      .hero {
+        padding: 45px 5%;
+      }
+
+      main {
+        padding: 28px 5% 50px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="logo">MI TIENDA.</div>
+    <button class="cart-button" id="open-cart">
+      Carrito (<span id="cart-count">0</span>)
+    </button>
+  </header>
+
+  <section class="hero">
+    <p>BIENVENIDO A NUESTRA TIENDA</p>
+    <h1>Productos que vale la pena descubrir.</h1>
+    <p>Explorá nuestra selección y encontrá tu próximo favorito.</p>
+    <button class="cart-button" id="explore">
+      Explorar productos
+    </button>
+  </section>
+
+  <main>
+    <h2>Nuestros productos</h2>
+    <p>Una selección para vos.</p>
+
+    <div class="products" id="products"></div>
+
+    <section class="cart" id="cart">
+      <h2>Tu carrito</h2>
+      <div id="cart-items"></div>
+      <h3>Total: <span id="cart-total">$ 0</span></h3>
+      <p>Esta es una demostración. Todavía no se realizan pagos.</p>
+      <button id="clear-cart">Vaciar carrito</button>
+    </section>
+  </main>
+
+  <footer>
+    Mi Tienda · Contacto · Envíos y devoluciones
+  </footer>
+
+  <script>
+    const products = [
+      {
+        id: 1,
+        name: "Producto Uno",
+        description: "Una descripción breve de este producto.",
+        price: 590,
+        emoji: "🎁"
+      },
+      {
+        id: 2,
+        name: "Producto Dos",
+        description: "Contá qué lo hace especial.",
+        price: 850,
+        emoji: "✨"
+      },
+      {
+        id: 3,
+        name: "Producto Tres",
+        description: "Agregá aquí sus características.",
+        price: 1200,
+        emoji: "🛍️"
+      }
+    ];
+
+    let cart = JSON.parse(localStorage.getItem("mi-tienda-cart") || "[]");
+
+    const money = amount =>
+      "$ " + amount.toLocaleString("es-UY");
+
+    function renderProducts() {
+      document.getElementById("products").innerHTML =
+        products.map(product => `
+          <article class="product">
+            <div class="product-image" aria-hidden="true">
+              ${product.emoji}
+            </div>
+            <div class="product-info">
+              <h3>${product.name}</h3>
+              <p>${product.description}</p>
+              <div class="price">${money(product.price)}</div>
+              <button class="add-button" data-add="${product.id}">
+                Agregar al carrito
+              </button>
+            </div>
+          </article>
+        `).join("");
+    }
+
+    function saveCart() {
+      localStorage.setItem("mi-tienda-cart", JSON.stringify(cart));
+    }
+
+    function addToCart(id) {
+      const existing = cart.find(item => item.id === id);
+
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({ id, quantity: 1 });
+      }
+
+      saveCart();
+      renderCart();
+    }
+
+    function changeQuantity(id, amount) {
+      const item = cart.find(item => item.id === id);
+      if (!item) return;
+
+      item.quantity += amount;
+      cart = cart.filter(item => item.quantity > 0);
+
+      saveCart();
+      renderCart();
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(item => item.id !== id);
+      saveCart();
+      renderCart();
+    }
+
+    function renderCart() {
+      const count = cart.reduce(
+        (sum, item) => sum + item.quantity, 0
+      );
+
+      const total = cart.reduce((sum, item) => {
+        const product = products.find(p => p.id === item.id);
+        return sum + (product ? product.price * item.quantity : 0);
+      }, 0);
+
+      document.getElementById("cart-count").textContent = count;
+      document.getElementById("cart-total").textContent = money(total);
+
+      document.getElementById("cart-items").innerHTML =
+        cart.length === 0
+          ? "<p>Tu carrito está vacío.</p>"
+          : cart.map(item => {
+              const product = products.find(p => p.id === item.id);
+              if (!product) return "";
+
+              return `
+                <div class="cart-item">
+                  <div>
+                    <strong>${product.name}</strong><br>
+                    ${money(product.price * item.quantity)}
+                  </div>
+                  <div class="quantity">
+                    <button data-minus="${item.id}" aria-label="Reducir cantidad">−</button>
+                    <span>${item.quantity}</span>
+                    <button data-plus="${item.id}" aria-label="Aumentar cantidad">+</button>
+                    <button class="remove-button" data-remove="${item.id}">
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join("");
+    }
+
+    document.addEventListener("click", event => {
+      const button = event.target.closest("button");
+      if (!button) return;
+
+      if (button.dataset.add) {
+        addToCart(Number(button.dataset.add));
+      }
+
+      if (button.dataset.plus) {
+        changeQuantity(Number(button.dataset.plus), 1);
+      }
+
+      if (button.dataset.minus) {
+        changeQuantity(Number(button.dataset.minus), -1);
+      }
+
+      if (button.dataset.remove) {
+        removeFromCart(Number(button.dataset.remove));
+      }
+    });
+
+    document.getElementById("open-cart").addEventListener("click", () => {
+      document.getElementById("cart").classList.toggle("visible");
+      document.getElementById("cart").scrollIntoView({ behavior: "smooth" });
+    });
+
+    document.getElementById("explore").addEventListener("click", () => {
+      document.getElementById("products").scrollIntoView({ behavior: "smooth" });
+    });
+
+    document.getElementById("clear-cart").addEventListener("click", () => {
+      cart = [];
+      saveCart();
+      renderCart();
+    });
+
+    renderProducts();
+    renderCart();
+  </script>
+</body>
+</html>
